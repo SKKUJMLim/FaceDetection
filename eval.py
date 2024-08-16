@@ -208,8 +208,8 @@ if __name__ == '__main__':
 
     overall_recall = calculate_overall_recall(images_results)
     overall_precision = calculate_overall_precision(images_results)
-    average_precision = calculate_average_precision(test_images)
 
+    average_precision = calculate_average_precision(test_images)
 
     print(f"Overall Recall: {overall_recall:.2f}")
     print(f"Overall Precision: {overall_precision:.2f}")
