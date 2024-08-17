@@ -34,6 +34,10 @@ def calculate_true_positives(predictions: List[Tuple[int, int, int, int]], groun
     :param iou_threshold: TP로 간주할 IoU 임계값
     :return: True Positives 수
     """
+
+    if len(predictions) == 0:
+        return 0  # 예측이 없을 경우 TP는 0
+
     true_positives = 0
     detected = [False] * len(ground_truths)
 
@@ -56,6 +60,9 @@ def calculate_false_positives(predictions: List[Tuple[int, int, int, int]], grou
     :param iou_threshold: TP로 간주할 IoU 임계값
     :return: False Positives 수
     """
+    if len(predictions) == 0:
+        return 0  # 예측이 없을 경우 FP는 0
+
     false_positives = 0
     for pred_box in predictions:
         match_found = False
@@ -156,8 +163,8 @@ def calculate_average_precision(images, thresholds=np.linspace(0.1, 0.9, 9)):
         recalls_at_threshold = []
 
         for image in images:
-            predictions = image['predictions']
-            ground_truths = image['ground_truths']
+            predictions = image.get('predictions', [])
+            ground_truths = image.get('ground_truths', [])
             precision, recall = calculate_precision_recall_at_threshold(predictions, ground_truths, threshold)
             precisions_at_threshold.append(precision)
             recalls_at_threshold.append(recall)
@@ -193,8 +200,10 @@ if __name__ == '__main__':
         {
             'predictions': [(30, 30, 80, 80), (170, 170, 220, 220)],
             'ground_truths': [(25, 25, 75, 75), (160, 160, 210, 210), (100, 100, 150, 150)]
-        }
+        },
         # 더 많은 이미지 데이터 추가 가능
+        # {'predictions': [(312, 612, 340, 657)], 'ground_truths': [(313, 613, 341, 661)]}
+
     ]
 
     images_results = []
