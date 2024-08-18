@@ -20,6 +20,7 @@ def xml_parsing(img_file_path, xml_file_path, detector, output_path):
     red_color = (0, 0, 255)
 
     test_images = []
+    not_detection = []
 
     for xml_file in xml_paths:
 
@@ -78,7 +79,13 @@ def xml_parsing(img_file_path, xml_file_path, detector, output_path):
         # img_rgb = cv2.cvtColor(draw_img, cv2.COLOR_BGR2RGB)
         cv2.imwrite(output_path + img_path + ".jpg", draw_img)
 
+        if len(predictions) != len(ground_truths):
+            not_detection.append(img_path)
+
         test_images.append({"predictions": predictions, "ground_truths": ground_truths})
+
+        print("Not Detecitonn List")
+        print(not_detection)
 
     return test_images
 
