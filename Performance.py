@@ -55,10 +55,14 @@ def xml_parsing(img_file_path, xml_file_path, detector, output_path):
 
             # Grount truth는 녹색으로 box 표시
             for object in root.iter('object'):
+
                 index = object.find('index').text
 
-                width = (object.find('bndbox').findtext('width'))
+                width = int(object.find('bndbox').findtext('width'))
                 height = int(object.find('bndbox').findtext('height'))
+
+                if width * height < 25 **2:
+                    continue
 
                 xmin = int(object.find('bndbox').findtext('xmin'))
                 ymin = int(object.find('bndbox').findtext('ymin'))
