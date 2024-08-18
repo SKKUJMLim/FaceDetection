@@ -90,10 +90,10 @@ def xml_parsing(img_file_path, xml_file_path, detector, output_path):
         except Exception as e:
             print(f"예상치 못한 오류가 발생했습니다: {e}")
 
-        print("Detecitonn ERROR List")
-        print(not_detection)
-        print("XML ERROR List")
-        print(not_xml)
+    print("Detecitonn ERROR List")
+    print(not_detection)
+    print("XML ERROR List")
+    print(not_xml)
 
     return test_images
 
