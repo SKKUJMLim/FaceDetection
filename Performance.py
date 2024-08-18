@@ -21,71 +21,79 @@ def xml_parsing(img_file_path, xml_file_path, detector, output_path):
 
     test_images = []
     not_detection = []
+    not_xml = []
 
     for xml_file in xml_paths:
 
         print("detection... ", xml_file)
-
-        tree = ET.parse(xml_file_path + xml_file)
-        root = tree.getroot()
-
-        img_path, _ = os.path.splitext(xml_file)
-        img = cv2.imread(img_file_path + img_path + ".jpg")
-        # opencv의 rectangle()는 인자로 들어온 이미지 배열에 그대로 사각형을 그려주므로 별도의 이미지 배열에 그림 작업 수행.
-        draw_img = img.copy()
-
-        ta = datetime.datetime.now()
-        bboxes, kpss = detector.detect(img, 0.5, input_size=(640, 640))
-        # bboxes, kpss = detector.detect(img, 0.5)
-        tb = datetime.datetime.now()
-        # print('all cost:', (tb-ta).total_seconds()*1000)
-
         predictions = []
-
-        for i in range(bboxes.shape[0]):
-            bbox = bboxes[i]
-            xmin, ymin, xmax, ymax, score = bbox.astype(np.int32)
-
-            prediction= (xmin, ymin, xmax, ymax)
-            predictions.append(prediction)
-
-            # prediction은 빨간색으로 box 표시
-            cv2.rectangle(draw_img, (xmin, ymin), (xmax, ymax), color=red_color, thickness=7)
-
         ground_truths = []
 
-        for object in root.iter('object'):
-            index = object.find('index').text
+        try:
+            tree = ET.parse(xml_file_path + xml_file)
+            root = tree.getroot()
+            img_path, _ = os.path.splitext(xml_file)
+            img = cv2.imread(img_file_path + img_path + ".jpg")
+            # opencv의 rectangle()는 인자로 들어온 이미지 배열에 그대로 사각형을 그려주므로 별도의 이미지 배열에 그림 작업 수행.
+            draw_img = img.copy()
 
-            width = (object.find('bndbox').findtext('width'))
-            height = int(object.find('bndbox').findtext('height'))
+            ta = datetime.datetime.now()
+            bboxes, kpss = detector.detect(img, 0.5, input_size=(640, 640))
+            # bboxes, kpss = detector.detect(img, 0.5)
+            tb = datetime.datetime.now()
+            # print('all cost:', (tb-ta).total_seconds()*1000)
 
-            xmin = int(object.find('bndbox').findtext('xmin'))
-            ymin = int(object.find('bndbox').findtext('ymin'))
+            # prediction은 빨간색으로 box 표시
+            for i in range(bboxes.shape[0]):
+                bbox = bboxes[i]
+                xmin, ymin, xmax, ymax, score = bbox.astype(np.int32)
 
-            xmax = int(object.find('bndbox').findtext('xmax'))
-            ymax = int(object.find('bndbox').findtext('ymax'))
+                prediction = (xmin, ymin, xmax, ymax)
+                predictions.append(prediction)
 
-            ground_truth = (xmin, ymin, xmax, ymax)
-            ground_truths.append(ground_truth)
+                cv2.rectangle(draw_img, (xmin, ymin), (xmax, ymax), color=red_color, thickness=7)
 
             # Grount truth는 녹색으로 box 표시
-            cv2.rectangle(draw_img, (xmin, ymin), (xmax, ymax), color=green_color, thickness=5)
+            for object in root.iter('object'):
+                index = object.find('index').text
 
-            # draw_img 배열의 좌상단 좌표에 Size 표시
-            cv2.putText(draw_img, str(width) + "x" + str(height), (xmin, ymin - 5), cv2.FONT_HERSHEY_SIMPLEX, 2.2,
-                        red_color, thickness=2)
+                width = (object.find('bndbox').findtext('width'))
+                height = int(object.find('bndbox').findtext('height'))
 
-        # img_rgb = cv2.cvtColor(draw_img, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(output_path + img_path + ".jpg", draw_img)
+                xmin = int(object.find('bndbox').findtext('xmin'))
+                ymin = int(object.find('bndbox').findtext('ymin'))
 
-        if len(predictions) != len(ground_truths):
-            not_detection.append(img_path)
+                xmax = int(object.find('bndbox').findtext('xmax'))
+                ymax = int(object.find('bndbox').findtext('ymax'))
 
-        test_images.append({"predictions": predictions, "ground_truths": ground_truths})
+                ground_truth = (xmin, ymin, xmax, ymax)
+                ground_truths.append(ground_truth)
 
-        print("Not Detecitonn List")
+                cv2.rectangle(draw_img, (xmin, ymin), (xmax, ymax), color=green_color, thickness=5)
+
+                # draw_img 배열의 좌상단 좌표에 Size 표시
+                cv2.putText(draw_img, str(width) + "x" + str(height), (xmin, ymin - 5), cv2.FONT_HERSHEY_SIMPLEX, 2.2,
+                            red_color, thickness=2)
+
+            cv2.imwrite(output_path + img_path + ".jpg", draw_img)
+
+            # 하나라도 Face Detection 하지 못한 파일 체크
+            if len(predictions) != len(ground_truths):
+                not_detection.append(img_path)
+
+            test_images.append({"predictions": predictions, "ground_truths": ground_truths})
+
+        # Error 체크
+        except ET.ParseError as e:
+            not_xml.append(xml_file)
+            print(f"XML 파싱 중 오류가 발생했습니다: {e}")
+        except Exception as e:
+            print(f"예상치 못한 오류가 발생했습니다: {e}")
+
+        print("Detecitonn ERROR List")
         print(not_detection)
+        print("XML ERROR List")
+        print(not_xml)
 
     return test_images
 
